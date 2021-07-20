@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.gmcc.aliface.mapper.AliUserMapper">
+
+
+    <insert id="insertUser">
+        insert into ali_user(name, cert_type, cert_no, unique_id)
+          values(#{name}, #{certType}, #{certNo}, #{uniqueId})
+    </insert>
+
+
+
+
+</mapper>

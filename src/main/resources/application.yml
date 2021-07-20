@@ -1,0 +1,12 @@
+
+spring:
+  application:
+    name: kms-provider-service
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/gmcc_ali_frservice?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    username: root
+    password: XJjxR46t
+mybatis:
+  mapper-locations: com/gmcc/aliface/mapper/*.xml
+server:
+  port: 19091

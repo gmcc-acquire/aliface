@@ -95,7 +95,7 @@ public class SnowFlake {
      * 调用返回雪花函数字符串
      * @return
      */
-    public String snowFlakeGenerate(){
+    public static String snowFlakeGenerate(){
         SnowFlake snowFlake = new SnowFlake(0, 0);
         return String.valueOf(snowFlake.nextId());
     }

@@ -1,29 +1,30 @@
-package com.gmcc.aliface.controller;
+package com.gmcc.aliface.Service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
+import com.gmcc.aliface.Service.AlipayFaceService;
+import com.gmcc.aliface.SnowFlake;
 import com.gmcc.aliface.response.FaceUser;
 import com.gmcc.aliface.response.Institution;
 import com.gmcc.aliface.response.JsonRootBean;
 import com.gmcc.aliface.response.Response;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-//@RestController
-//@RequestMapping(value = "/api/v1/aliUserReigstor")
-public class IdentityInfoQuery {
+@Service
+public class AlipayFaceServiceImpl implements AlipayFaceService {
+    protected Log logger = LogFactory.getLog(this.getClass());
 
     @Value("${aliface.aliPubKey}")
     private String aliPubKey;
@@ -31,8 +32,13 @@ public class IdentityInfoQuery {
     @Value("${aliface.appPrivKey}")
     private String appPrivKey;
 
-    @PostMapping("/regist")
-    public Object regist(HttpServletRequest request) throws AlipayApiException {
+    @Override
+    public String generateUniqueId(HttpServletRequest request) {
+        return SnowFlake.snowFlakeGenerate();
+    }
+
+    @Override
+    public Object alipayInfoQuery(HttpServletRequest request) throws AlipayApiException {
         Map requestParams = request.getParameterMap();
         Map<String, String> sortedParams = new TreeMap<>();
 
@@ -86,13 +92,6 @@ public class IdentityInfoQuery {
         jsonBean.setResponse(response);
 
         return jsonBean;
-
-//        LocalDateTime now = LocalDateTime.now();
-//        String nowFormat = now.format(dateTimeFormatter);
-//        AliRegistor.setUniqueId(nowFormat);
-//
-//        int i = aliUserMapper.insertUser(AliRegistor);
-//
-//        return AliRegistor.getUniqueId();
     }
+
 }

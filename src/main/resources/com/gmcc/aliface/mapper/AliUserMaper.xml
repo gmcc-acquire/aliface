@@ -6,6 +6,11 @@
         values (#{uniqueId}, #{certNo}, #{certType}, #{userName}, #{userType})
     </insert>
 
+    <insert id="insertQueryMsg">
+        insert into alipay_query_msg(BIZ_ID, QUERY_MSG)
+        values (#{bizId}, #{queryMsg})
+    </insert>
+
     <select id="getUniqueId" resultType="java.lang.String">
         select UNIQUE_ID
         from alipay_face_user

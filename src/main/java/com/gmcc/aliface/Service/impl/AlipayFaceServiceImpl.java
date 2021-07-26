@@ -132,8 +132,9 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         institution.setId(institutionCode);
         institution.setFace_in_time("2020-07-09 16:30:32");
 
+        final String bizId = SnowFlake.snowFlakeGenerate();
         FaceUser faceUser = new FaceUser();
-        faceUser.setBiz_id("15984406295888074");
+        faceUser.setBiz_id(bizId);
         faceUser.setFace_id(certNoDecode);
         faceUser.setName(aliRegistor.getUserName());
         faceUser.setUser_type(aliRegistor.getUserType());
@@ -163,6 +164,9 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseQuery), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
         jsonBean.setSign(responseSign);
         jsonBean.setResponse(responseQuery);
+
+        // 存储发送的报文
+        aliUserMapper.insertQueryMsg(bizId, JSONObject.toJSONString(jsonBean));
 
         return jsonBean;
     }

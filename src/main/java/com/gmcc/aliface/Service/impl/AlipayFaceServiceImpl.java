@@ -41,6 +41,9 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
     @Value("${aliface.aesKey}")
     private String aesKey;
 
+    @Value("${aliface.institutionCode}")
+    private String institutionCode;
+
     @Autowired
     private AliUserMapper aliUserMapper;
 
@@ -126,7 +129,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         String certNoDecode = AESutil.aesDecrypt(aliRegistor.getCertNo(), aesKey);
         // 人脸入库机构ID集合
         Institution institution = new Institution();
-        institution.setId("2088210163187568");
+        institution.setId(institutionCode);
         institution.setFace_in_time("2020-07-09 16:30:32");
 
         FaceUser faceUser = new FaceUser();

@@ -11,6 +11,7 @@ import com.gmcc.aliface.entity.AliRegistor;
 import com.gmcc.aliface.mapper.AliUserMapper;
 import com.gmcc.aliface.response.*;
 import com.gmcc.aliface.utils.AESutil;
+import com.gmcc.aliface.utils.GetAge;
 import com.gmcc.aliface.utils.SnowFlake;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -134,8 +136,14 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         faceUser.setUser_type(aliRegistor.getUserType());
         faceUser.setCert_type(aliRegistor.getCertType());
         faceUser.setCert_no(certNoDecode);
-        faceUser.setAlipay_uid_selector("0");
-        faceUser.setExt_info("{\"key\":\"value\"}");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+        int age = GetAge.getAge(sdf.parse(certNoDecode.substring(6, 14)));
+        if(age > 60){
+            faceUser.setAlipay_uid_selector("1");
+        } else {
+            faceUser.setAlipay_uid_selector("0");
+        }
+        faceUser.setExt_info("{}");
         List<Institution> institutions = new ArrayList();
         institutions.add(institution);
         faceUser.setInstitution_list(institutions);

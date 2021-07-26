@@ -43,7 +43,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
     private AliUserMapper aliUserMapper;
 
     @Override
-    public String generateUniqueId(HttpServletRequest request) throws Exception{
+    public String generateUniqueId(HttpServletRequest request) throws Exception {
         String name = request.getParameter("name");
         String idcard = request.getParameter("idcard");
         // 加密
@@ -66,7 +66,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
     }
 
     @Override
-    public Object alipayInfoQuery(HttpServletRequest request) throws AlipayApiException {
+    public Object alipayInfoQuery(HttpServletRequest request) throws Exception {
         Map<String, String[]> requestParams = request.getParameterMap();
         Map<String, String> sortedParams = new TreeMap<>();
 
@@ -88,34 +88,68 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         }
 
         System.out.println(verify_result);
-
         JsonRootBean jsonBean = new JsonRootBean();
+
+        // 验签失败 返回错误
+        if (!verify_result) {
+            ResponseQuery responseQuery = new ResponseQuery();
+            responseQuery.setCode("40004");
+            responseQuery.setMsg("Business Failed");
+            responseQuery.setSub_code("ISV_VERIFICATION_FAILED");
+            responseQuery.setSub_msg("验签失败");
+            String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseQuery), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+            jsonBean.setSign(responseSign);
+            jsonBean.setResponse(responseQuery);
+            System.out.println(JSONObject.toJSONString(jsonBean));
+            return jsonBean;
+        }
+
+        // 获取用户信息
+        AliRegistor aliRegistor = aliUserMapper.getUserInfo(sortedParams.get("unique_id"));
+        // null 返回错误
+        if (aliRegistor == null) {
+            ResponseQuery responseQuery = new ResponseQuery();
+            responseQuery.setCode("40004");
+            responseQuery.setMsg("Business Failed");
+            responseQuery.setSub_code("NO_DATA");
+            responseQuery.setSub_msg("查询结果为空");
+            String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseQuery), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+            jsonBean.setSign(responseSign);
+            jsonBean.setResponse(responseQuery);
+            System.out.println(JSONObject.toJSONString(jsonBean));
+            return jsonBean;
+        }
+
+        // 解密
+        String certNoDecode = AESutil.aesDecrypt(aliRegistor.getCertNo(), aesKey);
+        // 人脸入库机构ID集合
         Institution institution = new Institution();
-        institution.setId("2088200144875724");
+        institution.setId("2088210163187568");
         institution.setFace_in_time("2020-07-09 16:30:32");
+
         FaceUser faceUser = new FaceUser();
         faceUser.setBiz_id("15984406295888074");
-        faceUser.setFace_id("2088200455641481");
-        faceUser.setName("诸葛亮");
-        faceUser.setUser_type("1");
-        faceUser.setCert_type("A");
-        faceUser.setCert_no("2088200455641481");
+        faceUser.setFace_id(certNoDecode);
+        faceUser.setName(aliRegistor.getUserName());
+        faceUser.setUser_type(aliRegistor.getUserType());
+        faceUser.setCert_type(aliRegistor.getCertType());
+        faceUser.setCert_no(certNoDecode);
         faceUser.setAlipay_uid_selector("0");
         faceUser.setExt_info("{\"key\":\"value\"}");
         List<Institution> institutions = new ArrayList();
         institutions.add(institution);
         faceUser.setInstitution_list(institutions);
 
+        // 返回成功
         ResponseQuery responseQuery = new ResponseQuery();
         responseQuery.setCode("10000");
         responseQuery.setMsg("Success");
-        responseQuery.setFace_user_list(new ArrayList<FaceUser>());
+        responseQuery.setFace_user_list(new ArrayList<>());
         responseQuery.getFace_user_list().add(faceUser);
 
-        System.out.println(JSON.toJSON(responseQuery));
+        System.out.println(JSONObject.toJSONString(responseQuery));
 
-        String responseSign = AlipaySignature.sign(JSON.toJSON(responseQuery).toString(), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
-
+        String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseQuery), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
         jsonBean.setSign(responseSign);
         jsonBean.setResponse(responseQuery);
 
@@ -123,7 +157,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
     }
 
     @Override
-    public Object alipayCheckinNotify(HttpServletRequest request) throws AlipayApiException {
+    public Object alipayCheckinNotify(HttpServletRequest request) throws Exception {
         Map<String, String[]> requestParams = request.getParameterMap();
         Map<String, String> sortedParams = new TreeMap<>();
 

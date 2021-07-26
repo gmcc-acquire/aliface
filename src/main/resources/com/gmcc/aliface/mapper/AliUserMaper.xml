@@ -7,6 +7,22 @@
     </insert>
 
     <select id="getUniqueId" resultType="java.lang.String">
-        select UNIQUE_ID from alipay_face_user where CERT_NO = #{certNo}
+        select UNIQUE_ID
+        from alipay_face_user
+        where CERT_NO = #{certNo}
     </select>
+
+    <select id="getUserInfo" resultType="com.gmcc.aliface.entity.AliRegistor" resultMap="alipayUser">
+        select UNIQUE_ID, CERT_NO, CERT_TYPE, USER_NAME, USER_TYPE
+        from alipay_face_user
+        where UNIQUE_ID = #{uniqueId}
+    </select>
+
+    <resultMap id="alipayUser" type="com.gmcc.aliface.entity.AliRegistor">
+        <result property="uniqueId" column="UNIQUE_ID"/>
+        <result property="certNo" column="CERT_NO"/>
+        <result property="certType" column="CERT_TYPE"/>
+        <result property="userName" column="USER_NAME"/>
+        <result property="userType" column="USER_TYPE"/>
+    </resultMap>
 </mapper>

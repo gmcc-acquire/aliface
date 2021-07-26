@@ -8,7 +8,7 @@ public interface AlipayFaceService {
 
     String generateUniqueId(HttpServletRequest request) throws Exception;
 
-    Object alipayInfoQuery(HttpServletRequest request) throws AlipayApiException;
+    Object alipayInfoQuery(HttpServletRequest request) throws Exception;
 
-    Object alipayCheckinNotify(HttpServletRequest request) throws AlipayApiException;
+    Object alipayCheckinNotify(HttpServletRequest request) throws Exception;
 }

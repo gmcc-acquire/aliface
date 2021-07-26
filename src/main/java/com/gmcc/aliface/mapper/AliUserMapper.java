@@ -7,4 +7,6 @@ public interface AliUserMapper {
     int insertUser(AliRegistor aliRegistor);
 
     String getUniqueId(String aesIdCard);
+
+    AliRegistor getUserInfo(String unique_id);
 }

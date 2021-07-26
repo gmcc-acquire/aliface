@@ -1,4 +1,4 @@
-package com.gmcc.aliface;
+package com.gmcc.aliface.utils;
 
 /**
  * 分布式自增ID雪花算法snowflake

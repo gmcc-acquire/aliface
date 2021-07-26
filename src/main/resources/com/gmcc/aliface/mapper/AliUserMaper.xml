@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.gmcc.aliface.mapper.AliUserMapper">
-
-
     <insert id="insertUser">
-        insert into ali_user(name, cert_type, cert_no, unique_id)
-          values(#{name}, #{certType}, #{certNo}, #{uniqueId})
+        insert into alipay_face_user(UNIQUE_ID, CERT_NO, CERT_TYPE, USER_NAME, USER_TYPE)
+        values (#{uniqueId}, #{certNo}, #{certType}, #{userName}, #{userType})
     </insert>
 
-
-
-
+    <select id="getUniqueId" resultType="java.lang.String">
+        select UNIQUE_ID from alipay_face_user where CERT_NO = #{certNo}
+    </select>
 </mapper>

@@ -7,14 +7,11 @@ import com.alipay.api.internal.util.AlipaySignature;
 import com.gmcc.aliface.response.FaceUser;
 import com.gmcc.aliface.response.Institution;
 import com.gmcc.aliface.response.JsonRootBean;
-import com.gmcc.aliface.response.Response;
+import com.gmcc.aliface.response.ResponseQuery;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,18 +69,18 @@ public class IdentityInfoQuery {
         institutions.add(institution);
         faceUser.setInstitution_list(institutions);
 
-        Response response = new Response();
-        response.setCode("10000");
-        response.setMsg("Success");
-        response.setFace_user_list(new ArrayList<FaceUser>());
-        response.getFace_user_list().add(faceUser);
+        ResponseQuery responseQuery = new ResponseQuery();
+        responseQuery.setCode("10000");
+        responseQuery.setMsg("Success");
+        responseQuery.setFace_user_list(new ArrayList<FaceUser>());
+        responseQuery.getFace_user_list().add(faceUser);
 
-        System.out.println(JSON.toJSON(response));
+        System.out.println(JSON.toJSON(responseQuery));
 
-        String responseSign = AlipaySignature.sign(JSON.toJSON(response).toString(), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+        String responseSign = AlipaySignature.sign(JSON.toJSON(responseQuery).toString(), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
 
         jsonBean.setSign(responseSign);
-        jsonBean.setResponse(response);
+        jsonBean.setResponse(responseQuery);
 
         return jsonBean;
 

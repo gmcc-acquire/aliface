@@ -1,16 +1,16 @@
 package com.gmcc.aliface.response;
 
-public class JsonRootBean {
+public class JsonRootBean<T> {
 
-    private Response response;
+    private T response;
     private String sign;
 
-    public void setResponse(Response response) {
-        this.response = response;
+    public T getResponse() {
+        return response;
     }
 
-    public Response getResponse() {
-        return response;
+    public void setResponse(T response) {
+        this.response = response;
     }
 
     public void setSign(String sign) {

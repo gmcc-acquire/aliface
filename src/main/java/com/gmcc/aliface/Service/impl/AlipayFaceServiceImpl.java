@@ -1,18 +1,22 @@
 package com.gmcc.aliface.Service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.AlipayConstants;
 import com.alipay.api.internal.util.AlipaySignature;
 import com.gmcc.aliface.Service.AlipayFaceService;
-import com.gmcc.aliface.SnowFlake;
-import com.gmcc.aliface.response.FaceUser;
-import com.gmcc.aliface.response.Institution;
-import com.gmcc.aliface.response.JsonRootBean;
-import com.gmcc.aliface.response.Response;
+import com.gmcc.aliface.entity.AliRegistor;
+import com.gmcc.aliface.mapper.AliUserMapper;
+import com.gmcc.aliface.response.*;
+import com.gmcc.aliface.utils.AESutil;
+import com.gmcc.aliface.utils.SnowFlake;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,18 +36,42 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
     @Value("${aliface.appPrivKey}")
     private String appPrivKey;
 
+    @Value("${aliface.aesKey}")
+    private String aesKey;
+
+    @Autowired
+    private AliUserMapper aliUserMapper;
+
     @Override
-    public String generateUniqueId(HttpServletRequest request) {
-        return SnowFlake.snowFlakeGenerate();
+    public String generateUniqueId(HttpServletRequest request) throws Exception{
+        String name = request.getParameter("name");
+        String idcard = request.getParameter("idcard");
+        // 加密
+        String aesIdCard = AESutil.aesEncrypt(idcard, aesKey);
+        AliRegistor aliRegistor = new AliRegistor();
+        aliRegistor.setUserType("0");
+        aliRegistor.setCertType("1");
+        aliRegistor.setCertNo(aesIdCard);
+        aliRegistor.setUserName(name);
+        String uniqueId = SnowFlake.snowFlakeGenerate();
+        aliRegistor.setUniqueId(uniqueId);
+        int count = 0;
+        try {
+            count = aliUserMapper.insertUser(aliRegistor);
+        } catch (DuplicateKeyException e) {
+            // 返回库里已经存储的uniqueId
+            uniqueId = aliUserMapper.getUniqueId(aesIdCard);
+        }
+        return uniqueId;
     }
 
     @Override
     public Object alipayInfoQuery(HttpServletRequest request) throws AlipayApiException {
-        Map requestParams = request.getParameterMap();
+        Map<String, String[]> requestParams = request.getParameterMap();
         Map<String, String> sortedParams = new TreeMap<>();
 
         for (Object key : requestParams.keySet()) {
-            String[] values = (String[]) requestParams.get(key);
+            String[] values = requestParams.get(key);
             String valueStr = "";
             for (int i = 0; i < values.length; i++) {
                 valueStr = (i == values.length - 1) ? valueStr + values[i]
@@ -78,19 +106,63 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         institutions.add(institution);
         faceUser.setInstitution_list(institutions);
 
-        Response response = new Response();
-        response.setCode("10000");
-        response.setMsg("Success");
-        response.setFace_user_list(new ArrayList<FaceUser>());
-        response.getFace_user_list().add(faceUser);
+        ResponseQuery responseQuery = new ResponseQuery();
+        responseQuery.setCode("10000");
+        responseQuery.setMsg("Success");
+        responseQuery.setFace_user_list(new ArrayList<FaceUser>());
+        responseQuery.getFace_user_list().add(faceUser);
 
-        System.out.println(JSON.toJSON(response));
+        System.out.println(JSON.toJSON(responseQuery));
 
-        String responseSign = AlipaySignature.sign(JSON.toJSON(response).toString(), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+        String responseSign = AlipaySignature.sign(JSON.toJSON(responseQuery).toString(), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
 
         jsonBean.setSign(responseSign);
-        jsonBean.setResponse(response);
+        jsonBean.setResponse(responseQuery);
 
+        return jsonBean;
+    }
+
+    @Override
+    public Object alipayCheckinNotify(HttpServletRequest request) throws AlipayApiException {
+        Map<String, String[]> requestParams = request.getParameterMap();
+        Map<String, String> sortedParams = new TreeMap<>();
+
+        for (Object key : requestParams.keySet()) {
+            String[] values = requestParams.get(key);
+            String valueStr = "";
+            for (int i = 0; i < values.length; i++) {
+                valueStr = (i == values.length - 1) ? valueStr + values[i]
+                        : valueStr + values[i] + ",";
+            }
+            System.out.println("key : " + key.toString() + "------- value : " + valueStr);
+            sortedParams.put(key.toString(), valueStr);
+        }
+        boolean verify_result = false;
+        try {
+            verify_result = AlipaySignature.rsaCheckV1(sortedParams, aliPubKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+        } catch (AlipayApiException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println(verify_result);
+
+        JsonRootBean jsonBean = new JsonRootBean();
+
+        ResponseNotify responseNotify = new ResponseNotify();
+        responseNotify.setCode("40004");
+        responseNotify.setMsg("Business Failed");
+//        responseNotify.setResult(true);
+        responseNotify.setSub_code("SYSTEM_ERROR");
+        responseNotify.setSub_msg("系统繁忙");
+
+        System.out.println(JSON.toJSON(responseNotify));
+
+        String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseNotify, SerializerFeature.WriteMapNullValue), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+
+        jsonBean.setSign(responseSign);
+        jsonBean.setResponse(responseNotify);
+
+        System.out.println(JSON.toJSON(jsonBean));
         return jsonBean;
     }
 

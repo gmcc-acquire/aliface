@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AliRegistor {
-    private String name;
+    private String userName;
     private String userType;
     private String certType;
     private String certNo;

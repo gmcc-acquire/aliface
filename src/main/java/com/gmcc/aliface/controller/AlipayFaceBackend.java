@@ -3,10 +3,7 @@ package com.gmcc.aliface.controller;
 import com.alipay.api.AlipayApiException;
 import com.gmcc.aliface.Service.AlipayFaceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -18,7 +15,9 @@ public class AlipayFaceBackend {
     private AlipayFaceService alipayFaceService;
 
     @PostMapping("/regist")
-    public Object regist(HttpServletRequest request, @RequestParam String method) throws AlipayApiException {
+    public Object regist(HttpServletRequest request,
+                         @RequestParam String method) throws Exception {
+        System.out.println("method:---" + method);
         Object returnObj = null;
         switch (method) {
             case "spi.alipay.commerce.frservice.generateUniqueId":
@@ -28,6 +27,7 @@ public class AlipayFaceBackend {
                 returnObj = alipayFaceService.alipayInfoQuery(request);
                 break;
             case "spi.alipay.commerce.frservice.checkin.notify":
+                returnObj = alipayFaceService.alipayCheckinNotify(request);
                 break;
             default:
                 break;

@@ -106,7 +106,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
             jsonBean.setSign(responseSign);
             jsonBean.setResponse(responseQuery);
             System.out.println(JSONObject.toJSONString(jsonBean));
-            return jsonBean;
+            return JSONObject.toJSONString(jsonBean);
         }
 
         // 获取用户信息
@@ -122,7 +122,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
             jsonBean.setSign(responseSign);
             jsonBean.setResponse(responseQuery);
             System.out.println(JSONObject.toJSONString(jsonBean));
-            return jsonBean;
+            return JSONObject.toJSONString(jsonBean);
         }
 
         // 解密
@@ -130,7 +130,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         // 人脸入库机构ID集合
         Institution institution = new Institution();
         institution.setId(institutionCode);
-        institution.setFace_in_time("2020-07-09 16:30:32");
+        institution.setFace_in_time("2020-07-29 16:30:32");
 
         final String bizId = SnowFlake.snowFlakeGenerate();
         FaceUser faceUser = new FaceUser();
@@ -156,10 +156,9 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         ResponseQuery responseQuery = new ResponseQuery();
         responseQuery.setCode("10000");
         responseQuery.setMsg("Success");
+        responseQuery.setUnique_id(aliRegistor.getUniqueId());
         responseQuery.setFace_user_list(new ArrayList<>());
         responseQuery.getFace_user_list().add(faceUser);
-
-        System.out.println(JSONObject.toJSONString(responseQuery));
 
         String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseQuery), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
         jsonBean.setSign(responseSign);
@@ -167,8 +166,8 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
 
         // 存储发送的报文
         aliUserMapper.insertQueryMsg(bizId, JSONObject.toJSONString(jsonBean));
-
-        return jsonBean;
+        System.out.println(JSONObject.toJSONString(jsonBean));
+        return JSONObject.toJSONString(jsonBean);
     }
 
     @Override
@@ -194,8 +193,20 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         }
 
         System.out.println(verify_result);
-
         JsonRootBean jsonBean = new JsonRootBean();
+        // 验签失败 返回错误
+        if (!verify_result) {
+            ResponseNotify responseNotify = new ResponseNotify();
+            responseNotify.setCode("40004");
+            responseNotify.setMsg("Business Failed");
+            responseNotify.setSub_code("ISV_VERIFICATION_FAILED");
+            responseNotify.setSub_msg("验签失败");
+            String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseNotify), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+            jsonBean.setSign(responseSign);
+            jsonBean.setResponse(responseNotify);
+            System.out.println(JSONObject.toJSONString(jsonBean));
+            return JSONObject.toJSONString(jsonBean);
+        }
 
         ResponseNotify responseNotify = new ResponseNotify();
         responseNotify.setCode("40004");
@@ -206,13 +217,12 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
 
         System.out.println(JSON.toJSON(responseNotify));
 
-        String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseNotify, SerializerFeature.WriteMapNullValue), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+        String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseNotify), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
 
         jsonBean.setSign(responseSign);
         jsonBean.setResponse(responseNotify);
 
-        System.out.println(JSON.toJSON(jsonBean));
-        return jsonBean;
+        System.out.println(JSONObject.toJSONString(jsonBean));
+        return JSONObject.toJSONString(jsonBean);
     }
-
 }

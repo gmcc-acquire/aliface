@@ -142,7 +142,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         faceUser.setCert_no(certNoDecode);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
         int age = GetAge.getAge(sdf.parse(certNoDecode.substring(6, 14)));
-        if(age > 60){
+        if (age > 60) {
             faceUser.setAlipay_uid_selector("1");
         } else {
             faceUser.setAlipay_uid_selector("0");
@@ -165,7 +165,7 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         jsonBean.setResponse(responseQuery);
 
         // 存储发送的报文
-        aliUserMapper.insertQueryMsg(bizId, JSONObject.toJSONString(jsonBean));
+        aliUserMapper.insertQueryMsg(bizId, sortedParams.get("unique_id"), JSONObject.toJSONString(jsonBean));
         System.out.println(JSONObject.toJSONString(jsonBean));
         return JSONObject.toJSONString(jsonBean);
     }
@@ -208,12 +208,31 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
             return JSONObject.toJSONString(jsonBean);
         }
 
+        // 入库
+        int count = 0;
+        try {
+            count = aliUserMapper.insertNotifyRequest(sortedParams);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if(count == 0){
+            // 入库错误
+            ResponseNotify responseNotify = new ResponseNotify();
+            responseNotify.setCode("40004");
+            responseNotify.setMsg("Business Failed");
+            responseNotify.setSub_code("BIZ_ERROR");
+            responseNotify.setSub_msg("业务异常");
+            String responseSign = AlipaySignature.sign(JSONObject.toJSONString(responseNotify), appPrivKey, StandardCharsets.UTF_8.name(), AlipayConstants.SIGN_TYPE_RSA2);
+            jsonBean.setSign(responseSign);
+            jsonBean.setResponse(responseNotify);
+            System.out.println(JSONObject.toJSONString(jsonBean));
+            return JSONObject.toJSONString(jsonBean);
+        }
+
         ResponseNotify responseNotify = new ResponseNotify();
-        responseNotify.setCode("40004");
-        responseNotify.setMsg("Business Failed");
-//        responseNotify.setResult(true);
-        responseNotify.setSub_code("SYSTEM_ERROR");
-        responseNotify.setSub_msg("系统繁忙");
+        responseNotify.setCode("10000");
+        responseNotify.setMsg("Success");
+        responseNotify.setResult(true);
 
         System.out.println(JSON.toJSON(responseNotify));
 
@@ -222,6 +241,9 @@ public class AlipayFaceServiceImpl implements AlipayFaceService {
         jsonBean.setSign(responseSign);
         jsonBean.setResponse(responseNotify);
 
+        // 存储发送的报文
+        aliUserMapper.insertNotifyMsg(sortedParams.get("face_id"), sortedParams.get("biz_id"),
+                sortedParams.get("unique_id"), JSONObject.toJSONString(jsonBean));
         System.out.println(JSONObject.toJSONString(jsonBean));
         return JSONObject.toJSONString(jsonBean);
     }

@@ -19,8 +19,9 @@
     <insert id="insertNotifyRequest">
         INSERT INTO alipay_face_notify (FACE_ID, UNIQUE_ID, BIZ_ID, GTM_HAPPEN, BUSINESS_ID,
                                         BUSINESS_NAME, STATUS, MSG, RESULT_LIS)
-        values (#{face_id}, #{unique_id}, #{biz_id}, #{gmt_happen}, #{business_id}, #{business_name}, #{status},
-                #{msg}，#{result_list})
+        values (#{requestMap.face_id}, requestMap.unique_id}, #{requestMap.biz_id}, #{requestMap.gmt_happen},
+                #{requestMap.business_id}, #{requestMap.business_name}, #{requestMap.status},
+                #{requestMap.msg}，#{requestMap.result_list})
     </insert>
 
     <select id="getUniqueId" resultType="java.lang.String">
